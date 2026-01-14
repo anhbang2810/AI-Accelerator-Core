@@ -53,8 +53,7 @@ Hệ thống đã được kiểm chứng thành công trên **ModelSim**. Hình
 
 ### 2. Giản đồ xung (Waveform)
 
-![Detailed Simulation Waveform](<img width="970" height="553" alt="wavetb1" src="https://github.com/user-attachments/assets/22f193c5-f4de-4f87-af6e-8878b6e47c0b" />
-)
+![Detailed Simulation Waveform](AI-Accelerator-Core/blob/main/wavetb1.png)
 
 > **Phân tích:**
 > * Các tín hiệu `i_feature` (10, 5, 2) và `i_weight` (2, -3, 4) được đưa vào liên tục.
