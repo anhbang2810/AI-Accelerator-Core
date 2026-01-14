@@ -8,7 +8,7 @@
 
 ---
 
-## 📖 Tổng quan (Overview)
+##  Tổng quan (Overview)
 
 Dự án này tập trung thiết kế và hiện thực hóa một lõi phần cứng chuyên dụng cho các tác vụ Trí tuệ nhân tạo (AI) trên nền tảng FPGA. Khác với các thiết kế mạch số cơ bản, hệ thống này được xây dựng dưới dạng một **System-on-Chip (SoC)** hoàn chỉnh với kiến trúc Harvard, bao gồm CPU, Bộ nhớ và Lõi tính toán.
 
@@ -33,7 +33,7 @@ Hệ thống bao gồm 4 khối chính kết nối qua bus nội bộ:
 3.  **Instruction Memory:** Chứa mã máy (Firmware).
 4.  **Data Memory:** Chứa Feature Map và Weights.
 
-### 📜 Tập lệnh (Instruction Set Architecture - ISA)
+###  Tập lệnh (Instruction Set Architecture - ISA)
 
 | Opcode | Mnemonic | Operand (12-bit) | Mô tả |
 | :--- | :--- | :--- | :--- |
@@ -44,7 +44,7 @@ Hệ thống bao gồm 4 khối chính kết nối qua bus nội bộ:
 
 ##  Kết quả Mô phỏng (Simulation Results)
 
-Hệ thống đã được kiểm chứng thành công trên **ModelSim**.
+Hệ thống đã được kiểm chứng thành công trên **ModelSim**. Hình ảnh dưới đây minh họa chi tiết quá trình tính toán bên trong lõi xử lý (Processing Element).
 
 ### 1. Kịch bản kiểm thử (Test Scenario)
 * **Input:** Vector Feature `[10, 5, 2]` và Weight `[2, -3, 4]`.
@@ -52,10 +52,14 @@ Hệ thống đã được kiểm chứng thành công trên **ModelSim**.
 * **Phép tính:** `(10*2) + (5*-3) + (2*4) + 5 = 18`.
 
 ### 2. Giản đồ xung (Waveform)
-*(Hình ảnh mô phỏng cấp hệ thống, cho thấy Control Unit tự động điều khiển dòng dữ liệu)*
 
-![System Simulation](https://github.com/anhbang2810/AI-Accelerator-Core/blob/main/images/system_waveform.png?raw=true)
-> *Kết quả: Tín hiệu `result_out` trả về giá trị **18** (`00010010`) và `result_valid` mức cao -> **CHÍNH XÁC**.*
+![Detailed Simulation Waveform](<img width="970" height="553" alt="wavetb1" src="https://github.com/user-attachments/assets/22f193c5-f4de-4f87-af6e-8878b6e47c0b" />
+)
+
+> **Phân tích:**
+> * Các tín hiệu `i_feature` (10, 5, 2) và `i_weight` (2, -3, 4) được đưa vào liên tục.
+> * Sau độ trễ Pipeline, tín hiệu `o_result` trả về giá trị **18** và `o_valid` lên mức cao.
+> * Trường hợp thử nghiệm thứ 2 (bên phải ảnh) cho thấy hàm **ReLU** hoạt động chính xác: Kết quả âm bị triệt tiêu về 0.
 
 ---
 
@@ -68,4 +72,5 @@ Hệ thống đã được kiểm chứng thành công trên **ModelSim**.
 ├── instruction_memory.sv     # ROM chứa Firmware
 ├── npu_processor_top.sv      # Top-level SoC Wrapper
 ├── tb_npu_processor_top.sv   # Testbench tự động (System Level)
+├── images/                   # Thư mục chứa ảnh minh họa
 └── README.md                 # Tài liệu dự án
