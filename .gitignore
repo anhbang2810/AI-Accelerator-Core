@@ -1,0 +1,15 @@
+﻿db/
+incremental_db/
+output_files/
+simulation/
+*.qws
+*.sof
+*.pof
+*.sif
+*.jdi
+*.done
+*.pin
+*.qsf.bak
+*.rpt
+*.summary
+*.txt

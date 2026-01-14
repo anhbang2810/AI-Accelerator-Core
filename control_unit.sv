@@ -1,0 +1,78 @@
+// =============================================================================
+// Module:      control_unit
+// Description: FSM (Fetch -> Decode -> Execute).
+// =============================================================================
+`timescale 1ns/1ps
+
+module control_unit #(parameter ADDR_WIDTH=8) (
+    input  logic clk,
+    input  logic rst_n,
+    output logic [5:0] pc_out,       
+    input  logic [15:0] instruction, 
+    output logic [ADDR_WIDTH-1:0] mem_addr,
+    output logic pe_valid,
+    output logic pe_last
+);
+
+    localparam OP_CALC = 4'b0011;
+    localparam OP_HALT = 4'b1111;
+
+    typedef enum logic [2:0] {S_FETCH, S_DECODE, S_EXEC_CALC, S_HALT} state_t;
+    state_t current_state, next_state;
+    
+    logic [5:0] pc;
+    logic [11:0] operand; 
+    logic [ADDR_WIDTH-1:0] calc_cnt;
+
+    // 1. Program Counter
+    always_ff @(posedge clk or negedge rst_n) begin
+        if (!rst_n) pc <= 0;
+        else if (current_state == S_DECODE && next_state == S_FETCH) pc <= pc + 1;
+    end
+
+    // 2. State Memory
+    always_ff @(posedge clk or negedge rst_n) begin
+        if (!rst_n) current_state <= S_FETCH;
+        else current_state <= next_state;
+    end
+
+    // 3. Next State Logic
+    always_comb begin
+        next_state = current_state;
+        case (current_state)
+            S_FETCH:  next_state = S_DECODE;
+            S_DECODE: begin
+                if (instruction[15:12] == OP_CALC) next_state = S_EXEC_CALC;
+                else if (instruction[15:12] == OP_HALT) next_state = S_HALT;
+                else next_state = S_FETCH;
+            end
+            S_EXEC_CALC: begin
+                if (calc_cnt == operand[ADDR_WIDTH-1:0] - 1) next_state = S_FETCH;
+                else next_state = S_EXEC_CALC;
+            end
+            S_HALT: next_state = S_HALT;
+        endcase
+    end
+
+    // 4. Output Logic
+    always_ff @(posedge clk or negedge rst_n) begin
+        if (!rst_n) begin
+            calc_cnt <= 0; pe_valid <= 0; pe_last <= 0; operand <= 0;
+        end else begin
+            case (current_state)
+                S_DECODE: operand <= instruction[11:0];
+                S_EXEC_CALC: begin
+                    pe_valid <= 1;
+                    mem_addr <= calc_cnt;
+                    if (calc_cnt == operand[ADDR_WIDTH-1:0] - 1) begin
+                        pe_last <= 1; calc_cnt <= 0;
+                    end else begin
+                        pe_last <= 0; calc_cnt <= calc_cnt + 1;
+                    end
+                end
+                default: begin pe_valid <= 0; pe_last <= 0; end
+            endcase
+        end
+    end
+    assign pc_out = pc;
+endmodule

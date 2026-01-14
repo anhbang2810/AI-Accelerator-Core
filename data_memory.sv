@@ -1,0 +1,26 @@
+// =============================================================================
+// Module:      data_memory
+// Description: Single-port RAM 
+// =============================================================================
+`timescale 1ns/1ps
+
+module data_memory #(parameter WIDTH=8, parameter DEPTH=256) (
+    input  logic clk,
+    input  logic we,                  
+    input  logic [$clog2(DEPTH)-1:0] addr,
+    input  logic [WIDTH-1:0] wdata,
+    output logic [WIDTH-1:0] rdata
+);
+    logic [WIDTH-1:0] mem [0:DEPTH-1];
+
+    always_ff @(posedge clk) begin
+        if (we) mem[addr] <= wdata;
+        rdata <= mem[addr];
+    end
+    
+    // Khởi tạo sạch bộ nhớ
+    initial begin
+        integer i;
+        for(i=0; i<DEPTH; i++) mem[i] = 0;
+    end
+endmodule

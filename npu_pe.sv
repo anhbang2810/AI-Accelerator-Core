@@ -1,0 +1,65 @@
+`timescale 1ns/1ps
+
+module npu_pe 
+  #(
+    parameter DATA_WIDTH = 8,
+    parameter ACC_WIDTH  = 20
+  )
+  (
+    input  logic clk,
+    input  logic rst_n,
+    input  logic i_valid,
+    input  logic i_last,
+    input  logic signed [DATA_WIDTH-1:0] i_feature,
+    input  logic signed [DATA_WIDTH-1:0] i_weight,
+    input  logic signed [ACC_WIDTH-1:0]  i_bias,
+    output logic o_valid,
+    output logic signed [DATA_WIDTH-1:0] o_result
+  );
+
+  logic signed [ACC_WIDTH-1:0] mult_result, accumulator, mac_out;
+  logic r_valid_stage1, r_last_stage1;
+
+  // --- STAGE 1: MULTIPLIER ---
+  always_ff @(posedge clk or negedge rst_n) begin
+    if (!rst_n) begin
+      mult_result <= '0; r_valid_stage1 <= 0; r_last_stage1 <= 0;
+    end else if (i_valid) begin
+      mult_result <= i_feature * i_weight;
+      r_valid_stage1 <= 1;
+      r_last_stage1 <= i_last;
+    end else begin
+      r_valid_stage1 <= 0; r_last_stage1 <= 0;
+    end
+  end
+
+  // --- STAGE 2: ACCUMULATOR ---
+  always_ff @(posedge clk or negedge rst_n) begin
+    if (!rst_n) begin
+      accumulator <= '0; mac_out <= '0; o_valid <= 0;
+    end else if (r_valid_stage1) begin
+      if (r_last_stage1) begin
+        mac_out <= accumulator + mult_result + i_bias;
+        accumulator <= '0;
+        o_valid <= 1;
+      end else begin
+        accumulator <= accumulator + mult_result;
+        o_valid <= 0;
+      end
+    end else begin
+      o_valid <= 0;
+    end
+  end
+
+  // --- STAGE 3: ACTIVATION (ReLU) ---
+  logic signed [DATA_WIDTH-1:0] final_out;
+  localparam MAX_VAL = 2**(DATA_WIDTH-1) - 1;
+
+  always_comb begin
+    if (mac_out[ACC_WIDTH-1]) final_out = 0; // Negative -> 0
+    else if (mac_out > MAX_VAL) final_out = MAX_VAL; // Saturation
+    else final_out = mac_out[DATA_WIDTH-1:0];
+  end
+
+  assign o_result = final_out;
+endmodule
